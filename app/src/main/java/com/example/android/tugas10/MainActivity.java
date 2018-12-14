@@ -127,7 +127,7 @@ public class MainActivity extends AppCompatActivity {
                     GReal[p][q] += g[p][x]*cos(2*PI*x*q/width);
                     GImaginer[p][q] += g[p][x]*sin(2*PI*x*q/width);
                 }
-                GReal[p][q] /= width;
+                GReal[p][q] /= width; /** Scaling, only in Fourier not in inverse*/
                 GImaginer[p][q] /= width;
                 //GMagnitude[p][q] = sqrt(GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q]);
                 //GMagnitude[p][q] = GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q];
@@ -146,7 +146,7 @@ public class MainActivity extends AppCompatActivity {
                 int GIColor = 0xFF000000 | (GIVal<<16 | GIVal<<8 | GIVal);
                 freqI.setPixel(q,p,GIColor);
 
-                int GAVal = (int)((GAngle[p][q] + PI/2)*255/PI);
+                int GAVal = (int)((GAngle[p][q] + PI/2)*255/PI); /** scaling for display */
                 int GAColor = 0xFF000000 | (GAVal<<16 | GAVal<<8 | GAVal);
                 freqA.setPixel(q,p,GAColor);
             }
@@ -166,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
         /** Copy atas, ubah sinnya jadi minus, ingat Real = real*real - imag*imag dan Imag = real*imag + imag*real
          * Karena kan hasil fourier ada real dan imag
          * Ubah XML nya juga */
+
 
         /** Inverse DFT */
         for(int p=0; p<height; p++){
@@ -194,7 +195,7 @@ public class MainActivity extends AppCompatActivity {
                 int gIColor = 0xFF000000 | (gIVal<<16 | gIVal<<8 | gIVal);
                 hatI.setPixel(q,p,gIColor);
 
-                int gAVal = (int)((gAngle[p][q] + PI/2)*255/PI);
+                int gAVal = (int)((gAngle[p][q] + PI/2)*255/PI); /** scaling for display */
                 int gAColor = 0xFF000000 | (gAVal<<16 | gAVal<<8 | gAVal);
                 hatA.setPixel(q,p,gAColor);
             }
