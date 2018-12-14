@@ -16,6 +16,7 @@ import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
 import static java.lang.Math.cos;
+import static java.lang.Math.hypot;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
 
@@ -93,13 +94,21 @@ public class MainActivity extends AppCompatActivity {
         Bitmap freqR = spatial.copy(Bitmap.Config.ARGB_8888, true); //Real
         Bitmap freqI = spatial.copy(Bitmap.Config.ARGB_8888, true); //Imaginary
         Bitmap freqA = spatial.copy(Bitmap.Config.ARGB_8888, true); //angle
+        Bitmap hat = spatial.copy(Bitmap.Config.ARGB_8888, true); //magnitude
+        Bitmap hatR = spatial.copy(Bitmap.Config.ARGB_8888, true); //Real
+        Bitmap hatI = spatial.copy(Bitmap.Config.ARGB_8888, true); //Imaginary
+        Bitmap hatA = spatial.copy(Bitmap.Config.ARGB_8888, true); //angle
         int width = spatial.getWidth();
         int height = spatial.getHeight();
         int[][] g = new int[height][width]; /** original image */
-        double[][] GReal = new double[height][width]; /** original image */
-        double[][] GImaginer = new double[height][width]; /** original image */
-        double[][] GMagnitude = new double[height][width]; /** original image */
-        double[][] GAngle = new double[height][width]; /** original image */
+        double[][] GReal = new double[height][width]; /** Fourier real component */
+        double[][] GImaginer = new double[height][width]; /** Fourier imaginary component */
+        double[][] GMagnitude = new double[height][width]; /** Fourier Magnitude component*/
+        double[][] GAngle = new double[height][width]; /** Fourier Phase component */
+        double[][] gReal = new double[height][width]; /** Inverse Fourier real component */
+        double[][] gImaginer = new double[height][width]; /** Inverse Fourier imaginary component */
+        double[][] gMagnitude = new double[height][width]; /** InverseFourier Magnitude component*/
+        double[][] gAngle = new double[height][width]; /** Inverse Fourier Phase component */
 
         /** Storing Image into regular Array */
         for(int p=0; p<height; p++){
@@ -120,7 +129,9 @@ public class MainActivity extends AppCompatActivity {
                 }
                 GReal[p][q] /= width;
                 GImaginer[p][q] /= width;
-                GMagnitude[p][q] = sqrt(GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q]);
+                //GMagnitude[p][q] = sqrt(GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q]);
+                //GMagnitude[p][q] = GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q];
+                GMagnitude[p][q] = hypot(GReal[p][q],GImaginer[p][q])*width;
                 GAngle[p][q] = atan(GImaginer[p][q]/GReal[p][q]);
 
                 int GVal = (int)GMagnitude[p][q];
@@ -153,7 +164,52 @@ public class MainActivity extends AppCompatActivity {
         imgFourierAngle.setImageBitmap(freqA);
 
         /** Copy atas, ubah sinnya jadi minus, ingat Real = real*real - imag*imag dan Imag = real*imag + imag*real
+         * Karena kan hasil fourier ada real dan imag
          * Ubah XML nya juga */
+
+        /** Inverse DFT */
+        for(int p=0; p<height; p++){
+            for(int q=0; q<width; q++){
+
+                for(int x=0; x<width; x++){
+                    gReal[p][q] += GReal[p][x]*cos(2*PI*x*q/width) + GImaginer[p][x]*sin(2*PI*x*q/width);
+                    gImaginer[p][q] += GImaginer[p][x]*cos(2*PI*x*q/width) - GReal[p][x]*sin(2*PI*x*q/width);
+                }
+                //gReal[p][q] /= width;
+                //gImaginer[p][q] /= width;
+                //GMagnitude[p][q] = sqrt(GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q]);
+                //GMagnitude[p][q] = GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q];
+                gMagnitude[p][q] = hypot(gReal[p][q],gImaginer[p][q]);
+                gAngle[p][q] = atan(gImaginer[p][q]/gReal[p][q]);
+
+                int gVal = (int)gMagnitude[p][q];
+                int gColor = 0xFF000000 | (gVal<<16 | gVal<<8 | gVal);
+                hat.setPixel(q,p,gColor);
+
+                int gRVal = (int)gReal[p][q];
+                int gRColor = 0xFF000000 | (gRVal<<16 | gRVal<<8 | gRVal);
+                hatR.setPixel(q,p,gRColor);
+
+                int gIVal = (int)gImaginer[p][q];
+                int gIColor = 0xFF000000 | (gIVal<<16 | gIVal<<8 | gIVal);
+                hatI.setPixel(q,p,gIColor);
+
+                int gAVal = (int)((gAngle[p][q] + PI/2)*255/PI);
+                int gAColor = 0xFF000000 | (gAVal<<16 | gAVal<<8 | gAVal);
+                hatA.setPixel(q,p,gAColor);
+            }
+        }
+        ImageView imgInverseMagnitude = findViewById(R.id.imgInverseMagnitude);
+        imgInverseMagnitude.setImageBitmap(hat);
+
+        ImageView imgInverseReal = findViewById(R.id.imgInverseReal);
+        imgInverseReal.setImageBitmap(hatR);
+
+        ImageView imgInverseImaginer = findViewById(R.id.imgInverseImaginer);
+        imgInverseImaginer.setImageBitmap(hatI);
+
+        ImageView imgInverseAngle = findViewById(R.id.imgInverseAngle);
+        imgInverseAngle.setImageBitmap(hatA);
     }
 
     public void doIDFT(View view){
