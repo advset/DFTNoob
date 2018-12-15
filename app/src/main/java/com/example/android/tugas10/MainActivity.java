@@ -163,10 +163,13 @@ public class MainActivity extends AppCompatActivity {
         ImageView imgFourierAngle = findViewById(R.id.imgFourierAngle);
         imgFourierAngle.setImageBitmap(freqA);
 
+        /** Memanggil Fungsi Low Pass Filter untuk Real dan Imaginer*/
+        GReal = LPF(GReal,width,height);
+        GImaginer = LPF(GImaginer,width,height);
+
         /** Copy atas, ubah sinnya jadi minus, ingat Real = real*real - imag*imag dan Imag = real*imag + imag*real
          * Karena kan hasil fourier ada real dan imag
          * Ubah XML nya juga */
-
 
         /** Inverse DFT */
         for(int p=0; p<height; p++){
@@ -215,5 +218,18 @@ public class MainActivity extends AppCompatActivity {
 
     public void doIDFT(View view){
 
+    }
+
+    private double[][] LPF (double[][] fullMatrix, int width, int height){
+        double[][] croppedMatrix =  fullMatrix;
+        for(int i=0; i<height; i++){
+            for(int j=0; j<width; j++){
+                double distance = hypot((i-height/2),(j-width/2));
+                if(distance<height/3 && distance<width/3){
+                    croppedMatrix[i][j] =0 ;
+                }
+            }
+        }
+        return croppedMatrix;
     }
 }
