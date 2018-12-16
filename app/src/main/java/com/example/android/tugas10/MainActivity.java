@@ -16,6 +16,7 @@ import static java.lang.Math.PI;
 import static java.lang.Math.abs;
 import static java.lang.Math.atan;
 import static java.lang.Math.cos;
+import static java.lang.Math.exp;
 import static java.lang.Math.hypot;
 import static java.lang.Math.sin;
 import static java.lang.Math.sqrt;
@@ -164,8 +165,12 @@ public class MainActivity extends AppCompatActivity {
         imgFourierAngle.setImageBitmap(freqA);
 
         /** Memanggil Fungsi Low Pass Filter untuk Real dan Imaginer*/
-        GReal = LPF(GReal,width,height);
-        GImaginer = LPF(GImaginer,width,height);
+        /*GReal = LPF(GReal,width,height);
+        GImaginer = LPF(GImaginer,width,height); */
+
+        /** Memanggil Fungsi Gaussian untuk Real dan Imaginer*/
+        GReal = Gaussian1(GReal,width,height);
+        GImaginer = Gaussian1(GImaginer,width,height);
 
         /** Copy atas, ubah sinnya jadi minus, ingat Real = real*real - imag*imag dan Imag = real*imag + imag*real
          * Karena kan hasil fourier ada real dan imag
@@ -231,5 +236,20 @@ public class MainActivity extends AppCompatActivity {
             }
         }
         return croppedMatrix;
+    }
+
+    private double[][] Gaussian1 (double[][] fullMatrix, int width, int height){
+        double[][] gaussMatrix =  fullMatrix;
+        int sigma = 6;
+        for(int i=0; i<height; i++){
+            for(int j=0; j<width; j++){
+                //double distance = hypot(height/2, width/2) - hypot((i-height/2),(j-width/2));
+                //double distance = hypot((i-height/2),(j-width/2));
+                double distance = hypot((double)i,(double)j);
+                //gaussMatrix[i][j] = fullMatrix[i][j] * exp(-1*distance/(2*sigma*sigma))/(2*PI*sigma*sigma);
+                gaussMatrix[i][j] = fullMatrix[i][j] * exp(-1*distance/(2*sigma*sigma));
+            }
+        }
+        return gaussMatrix;
     }
 }
