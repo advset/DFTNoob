@@ -121,15 +121,24 @@ public class MainActivity extends AppCompatActivity {
         }
 
         /** DFT */
+        int scaling = height*width;
         for(int p=0; p<height; p++){
             for(int q=0; q<width; q++){
 
-                for(int x=0; x<width; x++){
-                    GReal[p][q] += g[p][x]*cos(2*PI*x*q/width);
-                    GImaginer[p][q] += g[p][x]*sin(2*PI*x*q/width);
+                for(int x=0; x<height; x++){
+                    for(int y=0; y<width; y++){
+                        GReal[p][q] += g[x][y]*(cos(2*PI*p*x/height)*cos(2*PI*q*y/width)-sin(2*PI*p*x/height)*sin(2*PI*q*y/width));
+                        GImaginer[p][q] += g[x][y]*(-1)*(sin(2*PI*p*x/height)*cos(2*PI*q*y/width)+cos(2*PI*p*x/height)*sin(2*PI*q*y/width));
+                        //GImaginer[p][q] -= g[p][x]*(sin(2*PI*p*x/height)*cos(2*PI*q*y/width)+cos(2*PI*p*x/height)*sin(2*PI*q*y/width))/scaling;
+
+                        double heng = GReal[p][q];
+                        double nyan = GImaginer[p][q];
+                    }
                 }
                 GReal[p][q] /= width; /** Scaling, only in Fourier not in inverse*/
+                GReal[p][q] /= height;
                 GImaginer[p][q] /= width;
+                GImaginer[p][q] /= height;
                 //GMagnitude[p][q] = sqrt(GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q]);
                 //GMagnitude[p][q] = GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q];
                 GMagnitude[p][q] = hypot(GReal[p][q],GImaginer[p][q])*width;
@@ -165,12 +174,12 @@ public class MainActivity extends AppCompatActivity {
         imgFourierAngle.setImageBitmap(freqA);
 
         /** Memanggil Fungsi Low Pass Filter untuk Real dan Imaginer*/
-        /*GReal = LPF(GReal,width,height);
-        GImaginer = LPF(GImaginer,width,height); */
+        GReal = LPF(GReal,width,height);
+        GImaginer = LPF(GImaginer,width,height);
 
         /** Memanggil Fungsi Gaussian untuk Real dan Imaginer*/
-        GReal = Gaussian1(GReal,width,height);
-        GImaginer = Gaussian1(GImaginer,width,height);
+        //GReal = Gaussian1(GReal,width,height);
+        //GImaginer = Gaussian1(GImaginer,width,height);
 
         /** Copy atas, ubah sinnya jadi minus, ingat Real = real*real - imag*imag dan Imag = real*imag + imag*real
          * Karena kan hasil fourier ada real dan imag
@@ -180,45 +189,22 @@ public class MainActivity extends AppCompatActivity {
         for(int p=0; p<height; p++){
             for(int q=0; q<width; q++){
 
-                for(int x=0; x<width; x++){
-                    gReal[p][q] += GReal[p][x]*cos(2*PI*x*q/width) + GImaginer[p][x]*sin(2*PI*x*q/width);
-                    gImaginer[p][q] += GImaginer[p][x]*cos(2*PI*x*q/width) - GReal[p][x]*sin(2*PI*x*q/width);
+                for(int x=0; x<height; x++){
+                    for(int y=0; y<width; y++){
+                        gReal[p][q] += GReal[x][y]*(cos(2*PI*p*x/height)*cos(2*PI*q*y/width)-sin(2*PI*p*x/height)*sin(2*PI*q*y/width))
+                                - GImaginer[x][y]*(sin(2*PI*p*x/height)*cos(2*PI*q*y/width)+cos(2*PI*p*x/height)*sin(2*PI*q*y/width));
+                    }
                 }
-                //gReal[p][q] /= width;
-                //gImaginer[p][q] /= width;
-                //GMagnitude[p][q] = sqrt(GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q]);
-                //GMagnitude[p][q] = GReal[p][q]*GReal[p][q] + GImaginer[p][q]*GImaginer[p][q];
-                gMagnitude[p][q] = hypot(gReal[p][q],gImaginer[p][q]);
-                gAngle[p][q] = atan(gImaginer[p][q]/gReal[p][q]);
-
-                int gVal = (int)gMagnitude[p][q];
-                int gColor = 0xFF000000 | (gVal<<16 | gVal<<8 | gVal);
-                hat.setPixel(q,p,gColor);
 
                 int gRVal = (int)gReal[p][q];
                 int gRColor = 0xFF000000 | (gRVal<<16 | gRVal<<8 | gRVal);
                 hatR.setPixel(q,p,gRColor);
 
-                int gIVal = (int)gImaginer[p][q];
-                int gIColor = 0xFF000000 | (gIVal<<16 | gIVal<<8 | gIVal);
-                hatI.setPixel(q,p,gIColor);
-
-                int gAVal = (int)((gAngle[p][q] + PI/2)*255/PI); /** scaling for display */
-                int gAColor = 0xFF000000 | (gAVal<<16 | gAVal<<8 | gAVal);
-                hatA.setPixel(q,p,gAColor);
             }
         }
-        ImageView imgInverseMagnitude = findViewById(R.id.imgInverseMagnitude);
-        imgInverseMagnitude.setImageBitmap(hat);
 
         ImageView imgInverseReal = findViewById(R.id.imgInverseReal);
         imgInverseReal.setImageBitmap(hatR);
-
-        ImageView imgInverseImaginer = findViewById(R.id.imgInverseImaginer);
-        imgInverseImaginer.setImageBitmap(hatI);
-
-        ImageView imgInverseAngle = findViewById(R.id.imgInverseAngle);
-        imgInverseAngle.setImageBitmap(hatA);
     }
 
     public void doIDFT(View view){
@@ -230,7 +216,7 @@ public class MainActivity extends AppCompatActivity {
         for(int i=0; i<height; i++){
             for(int j=0; j<width; j++){
                 double distance = hypot((i-height/2),(j-width/2));
-                if(distance<height/3 && distance<width/3){
+                if(distance<height/1.5 && distance<width/1.5){
                     croppedMatrix[i][j] =0 ;
                 }
             }
@@ -245,7 +231,8 @@ public class MainActivity extends AppCompatActivity {
             for(int j=0; j<width; j++){
                 //double distance = hypot(height/2, width/2) - hypot((i-height/2),(j-width/2));
                 //double distance = hypot((i-height/2),(j-width/2));
-                double distance = hypot((double)i,(double)j);
+                //double distance = hypot((double)i,(double)j);
+                double distance = (double)(i*i + j*j);
                 //gaussMatrix[i][j] = fullMatrix[i][j] * exp(-1*distance/(2*sigma*sigma))/(2*PI*sigma*sigma);
                 gaussMatrix[i][j] = fullMatrix[i][j] * exp(-1*distance/(2*sigma*sigma));
             }
